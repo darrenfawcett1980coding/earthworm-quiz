@@ -1,0 +1,5 @@
+ cd "C:\Users\User\OneDrive\Desktop\AWS COURSE OPT\AWS-small-PROJECTS\quiz-api-dynamo-lambda"
+
+git remote add origin https://github.com/darrenfawcett1980coding/earthworm-quiz.git
+git branch -M main
+git push -u origin main
