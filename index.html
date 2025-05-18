@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Earthworm Lab - AWS Quiz</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      text-align: center;
+      background-color: #2b2b2b;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 255, 128, 0.2);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    header .logo {
+      width: 100px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 10px 0;
+      color: #00ff99;
+      font-size: 1.8em;
+    }
+
+    .tagline {
+      font-style: italic;
+      margin-bottom: 30px;
+      color: #ccc;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      width: 80%;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background-color: #333;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    button {
+      background-color: #00cc88;
+      color: #fff;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #00aa77;
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 0.9em;
+      color: #777;
+    }
+
+    .aws-info {
+      margin-top: 10px;
+      font-size: 0.8em;
+      color: #888;
+    }
+
+    #quizSection {
+      display: none;
+    }
+
+    .lock-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .lock {
+      font-size: 2em;
+    }
+
+    .blurred {
+      filter: blur(6px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="startPage">
+      <header>
+        <div id="highScoreDisplay" style="color:#00ff99; font-size: 1.1em; margin-bottom: 10px;"></div>
+        <img src="images/worm-logo.png" alt="Earthworm Lab Logo" class="logo" />
+        <h1>Earthworm Lab: AWS Quiz</h1>
+        <p class="tagline">Think you can outsmart the worm? Prove it.</p>
+      </header>
+
+      <main>
+        <label for="username">Enter your worm name:</label>
+        <input type="text" id="username" placeholder="e.g. WormSlayer99" />
+        <button id="startBtn">▶ Play Game</button>
+      </main>
+
+      <footer>
+        <p>🪱 Earthworm Lab © 2025</p>
+        <div class="aws-info" id="awsInfo">Running in AWS... (loading info)</div>
+      </footer>
+    </div>
+
+    <div id="quizSection">
+      <div id="progress" style="margin-bottom: 10px; font-size: 1em; color: #ccc;">
+        Question <span id="currentNum">1</span>/5 — <span id="currentPercent">0</span>% correct
+      </div>
+      <div class="lock-container">
+        <span class="lock" id="lock1">🔒</span>
+        <span class="lock" id="lock2">🔒</span>
+        <span class="lock" id="lock3">🔒</span>
+        <span class="lock" id="lock4">🔒</span>
+        <span class="lock" id="lock5">🔒</span>
+      </div>
+      <div id="questionArea">
+        <h2 id="questionText">Question will appear here</h2>
+        <div id="answers"></div>
+      </div>
+      <div id="resultArea" style="margin-top: 20px; display: none;">
+        <p id="finalScore"></p>
+        <button onclick="playAgain()">🔁 Play Again</
+        <p id="finalScore"></p>
+        <img id="rewardImage" src="images/architecture.png" alt="Architecture Diagram" class="blurred" style="width: 100%; margin-top: 10px;" />
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const startPage = document.getElementById('startPage');
+    const quizSection = document.getElementById('quizSection');
+    const questionText = document.getElementById('questionText');
+    const answersContainer = document.getElementById('answers');
+    const finalScore = document.getElementById('finalScore');
+    const rewardImage = document.getElementById('rewardImage');
+
+    const locks = [
+      document.getElementById('lock1'),
+      document.getElementById('lock2'),
+      document.getElementById('lock3'),
+      document.getElementById('lock4'),
+      document.getElementById('lock5')
+    ];
+
+    let currentQuestionIndex = 0;
+    let correctCount = 0;
+    let questions = [
+      {
+        question: "What is Amazon S3 used for?",
+        answers: ["Compute", "Storage", "Database"],
+        correct: "Storage"
+      },
+      {
+        question: "Which service runs code without managing servers?",
+        answers: ["EC2", "Lambda", "EBS"],
+        correct: "Lambda"
+      },
+      {
+        question: "What is DynamoDB?",
+        answers: ["SQL DB", "File Storage", "NoSQL DB"],
+        correct: "NoSQL DB"
+      },
+      {
+        question: "Which AWS service delivers content with low latency?",
+        answers: ["CloudFront", "RDS", "Route53"],
+        correct: "CloudFront"
+      },
+      {
+        question: "What is IAM used for?",
+        answers: ["Monitoring", "Security/Access", "Networking"],
+        correct: "Security/Access"
+      }
+    ];
+
+    function loadQuestion() {
+      document.getElementById('currentNum').textContent = Math.min(currentQuestionIndex + 1, questions.length);
+      const percent = Math.round((correctCount / questions.length) * 100);
+      document.getElementById('currentPercent').textContent = percent;
+      if (currentQuestionIndex >= questions.length) {
+        showResults();
+        return;
+      }
+
+      const q = questions[currentQuestionIndex];
+      questionText.textContent = q.question;
+      answersContainer.innerHTML = '';
+
+      q.answers.forEach(answer => {
+        const btn = document.createElement('button');
+        btn.textContent = answer;
+        btn.onclick = () => handleAnswer(answer);
+        answersContainer.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(selected) {
+      const correctAnswer = questions[currentQuestionIndex].correct;
+      if (selected === correctAnswer) {
+        locks[currentQuestionIndex].textContent = '🔓';
+        correctCount++;
+      }
+      currentQuestionIndex++;
+      loadQuestion();
+    }
+
+    function showResults() {
+      document.getElementById('questionArea').style.display = 'none';
+      document.getElementById('resultArea').style.display = 'block';
+      const percent = Math.round((correctCount / questions.length) * 100);
+      const username = document.getElementById('username').value.trim();
+      finalScore.textContent = `Well done, ${username}! You got ${correctCount}/5 correct — that's ${percent}%!`;
+      if (correctCount >= 3) {
+        rewardImage.classList.remove('blurred');
+      }
+    }
+
+    startBtn.addEventListener('click', () => {
+      // Update high score display before starting
+      const highUser = localStorage.getItem('highScoreUser');
+      const highValue = localStorage.getItem('highScoreValue');
+      if (highUser && highValue) {
+        document.getElementById('highScoreDisplay').textContent = `High Score: ${highUser} — ${highValue}%`;
+      }
+      const username = document.getElementById('username').value.trim();
+      if (!username) return alert("Please enter a worm name!");
+      // Save previous high score if it was 100%
+      const prevPercent = Math.round((correctCount / questions.length) * 100);
+      if (prevPercent === 100) {
+        localStorage.setItem('highScoreUser', username);
+        localStorage.setItem('highScoreValue', '100');
+      }
+      startPage.style.display = 'none';
+      quizSection.style.display = 'block';
+      loadQuestion();
+    });
+
+    // Show high score immediately on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const highUser = localStorage.getItem('highScoreUser');
+      const highValue = localStorage.getItem('highScoreValue');
+      if (highUser && highValue) {
+        document.getElementById('highScoreDisplay').textContent = `High Score: ${highUser} — ${highValue}%`;
+      }
+    });
+
+    // Optional: Play again button logic (if added later)
+    window.playAgain = function() {
+      currentQuestionIndex = 0;
+      correctCount = 0;
+      startPage.style.display = 'block';
+      quizSection.style.display = 'none';
+      document.getElementById('questionArea').style.display = 'block';
+      document.getElementById('resultArea').style.display = 'none';
+      rewardImage.classList.add('blurred');
+      locks.forEach(lock => lock.textContent = '🔒');
+    };
+</script>
+</body>
+</html>
